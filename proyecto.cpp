@@ -14,6 +14,7 @@
 #include <climits>
 #include <numeric> 
 #include <chrono>
+#include <tuple>
 
 
 using namespace std;
@@ -71,22 +72,22 @@ struct soldado {
 
 struct estacion {
     string nombre;
-    int cantidadZombies ;
+    int cantidadZombies;
     estacion* siguiente;
-	vector<zombieFortaleza> zombies;
+    vector<zombieFortaleza> zombies;
     vector<struct estacionesAdyacentes> ady;
-	bool cura = false;
-
+    bool cura = false;
+    string id;
 };
 
 struct estacionesAdyacentes {
-	string destino="";
-	int distancia;
-}; 
+    string destino = "";
+    int distancia;
+};
 
 struct CompararEstaciones {
     bool operator()(const pair<estacion*, int>& a, const pair<estacion*, int>& b) {
-        return a.second > b.second;     
+        return a.second > b.second;
     }
 };
 
@@ -128,39 +129,39 @@ int leerEntero(const string& mensaje) {
     while (true) {
         cout << mensaje;
         cin >> valor;
-        if (cin.fail()) { 
-            cin.clear(); 
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
         else {
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
             return valor;
         }
     }
 }
 
 char leerChar(const string& mensaje) {
-	char valor;
-	while (true) {
-		cout << mensaje;
-		cin >> valor;
-		if (cin.fail()) { 
-			cin.clear();
-			cin.ignore(numeric_limits<streamsize>::max(), '\n');
-		}
-		else {
-			cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-			return valor; 
-		}
-	}
+    char valor;
+    while (true) {
+        cout << mensaje;
+        cin >> valor;
+        if (cin.fail()) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+        else {
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            return valor;
+        }
+    }
 }
 
 string leerString(const string& mensaje) {
-	string valor;
-	cout << mensaje;
-	cin.ignore();
-	getline(cin, valor);
-	return valor;
+    string valor;
+    cout << mensaje;
+    cin.ignore();
+    getline(cin, valor);
+    return valor;
 }
 
 int generarNumeroAleatorio(int max) {
@@ -170,7 +171,7 @@ int generarNumeroAleatorio(int max) {
     std::uniform_int_distribution<> distrib(0, max);  // Distribuidor para números entre 0 y max
 
     return distrib(gen);  // Genera y devuelve el número aleatorio
-}  
+}
 
 //soldado funciones 
 
@@ -187,7 +188,7 @@ soldado crearSoldado(string name, int vida) {
 
 void anadirSoldado(vector<soldado>& soldados, string name, int vida) {
     while (vida <= 0 || vida > 100) {
-		vida =leerEntero("La salud debe estar entre 0 y 100. Ingrese un valor válido: ");
+        vida = leerEntero("La salud debe estar entre 0 y 100. Ingrese un valor válido: ");
     }
     soldado soldadoNuevo = crearSoldado(name, vida);
     soldados.push_back(soldadoNuevo);
@@ -196,11 +197,11 @@ void anadirSoldado(vector<soldado>& soldados, string name, int vida) {
 
 void mostrarSoldados(const vector<soldado>& soldados) {
     int numero = 1;
-    if (soldados.empty()) {  
+    if (soldados.empty()) {
         cout << "No hay soldados creados." << endl;
     }
     else {
-        for (const auto& s : soldados) { 
+        for (const auto& s : soldados) {
             cout << "\nSoldado #" << numero << endl;
             cout << "Nombre: " << s.nombre << endl;
             cout << "Salud: " << s.salud << endl;
@@ -226,11 +227,11 @@ void mostrarSoldados(const vector<soldado>& soldados) {
 
 void eliminarSoldado(vector<soldado>& soldados) {
     mostrarSoldados(soldados);
-    
+
     int soldadoAEliminar;
     soldadoAEliminar = leerEntero("Seleccione el numero del soldado que desea eliminar?:");
     while (soldadoAEliminar<0 || soldadoAEliminar > soldados.size()) {
-		soldadoAEliminar = leerEntero("Seleccione un soldado que este creado: ");
+        soldadoAEliminar = leerEntero("Seleccione un soldado que este creado: ");
     }
 
     soldados.erase(soldados.begin() + soldadoAEliminar - 1);
@@ -290,7 +291,7 @@ void mostrarEquipos(vector<vector<soldado>>& soldados) {
         for (int i = 0; i < length; i++)
         {
             cout << "\nEquipo #" << i + 1 << endl;
-			mostrarSoldados(soldados[i]);
+            mostrarSoldados(soldados[i]);
         }
     }
 
@@ -302,63 +303,131 @@ void crearEquipo(vector<vector<soldado>>& equiposCreados) {
     int opcion = 0;
     int cantSoldados = leerEntero("Ingrese la cantidad de soldados que desea agregar al equipo: ");
 
-	while (cantSoldados < 0 || cantSoldados>5) {
-		cantSoldados = leerEntero("La cantidad de soldados debe ser entre 0 y 5. Ingrese un valor válido: ");
-	}
-    
-        for (int i = 0; i < cantSoldados; i++)
-        {
-            string nombre;
-            int salud;
-     
-            cout << "\nIngrese el nombre del soldado: ";
-            getline(cin, nombre);
-			cout << nombre << endl;
-            salud = leerEntero("Ingrese la salud del soldado: ");
-            anadirSoldado(equipo, nombre, salud);
-        }
-        equiposCreados.push_back(equipo);
-        cout << "\nEquipo creado con éxito." << endl;
+    while (cantSoldados < 0 || cantSoldados>5) {
+        cantSoldados = leerEntero("La cantidad de soldados debe ser entre 0 y 5. Ingrese un valor válido: ");
+    }
 
-        char seguir;
-        seguir = leerChar("Desea crear otro equipo? (s/n): ");
-        if (seguir == 's') {
-            crearEquipo(equiposCreados);
-        }
-        else {
-            return;
-        }
+    for (int i = 0; i < cantSoldados; i++)
+    {
+        string nombre;
+        int salud;
+
+        cout << "\nIngrese el nombre del soldado: ";
+        getline(cin, nombre);
+        cout << nombre << endl;
+        salud = leerEntero("Ingrese la salud del soldado: ");
+        anadirSoldado(equipo, nombre, salud);
+    }
+    equiposCreados.push_back(equipo);
+    cout << "\nEquipo creado con éxito." << endl;
+
+    char seguir;
+    seguir = leerChar("Desea crear otro equipo? (s/n): ");
+    if (seguir == 's') {
+        crearEquipo(equiposCreados);
+    }
+    else {
+        return;
+    }
 
 
 }
 
 void editarEquipo(vector<vector<soldado>>& equiposCreados) {
-	if (equiposCreados.size() <= 0) {
-		cout << "\nNo hay equipos creados." << endl;
-		return;
-	}
-	mostrarEquipos(equiposCreados);
-	
-    int equipoAEditar;
-	equipoAEditar = leerEntero("\nSeleccione el número del equipo que desea editar: ");
-	while (equipoAEditar < 1 || equipoAEditar > equiposCreados.size()) {
-		equipoAEditar = leerEntero("Seleccione un equipo que este creado: ");
-	}
-	
-    vector<soldado> equipo = equiposCreados[equipoAEditar - 1];
-	editarSoldado(equipo);
-	equiposCreados[equipoAEditar - 1] = equipo;
-	
-    cout << "\nEquipo editado con éxito." << endl;
-	
-    char opcion = leerChar("Desea editar otro equipo? (s/n): ");
-	if (opcion == 's') {
-		editarEquipo(equiposCreados);
-	}
-	else {
-		return;
-	}
+    if (equiposCreados.size() <= 0) {
+        cout << "\nNo hay equipos creados." << endl;
+        return;
+    }
+    mostrarEquipos(equiposCreados);
 
+    int equipoAEditar;
+    equipoAEditar = leerEntero("\nSeleccione el número del equipo que desea editar: ");
+    while (equipoAEditar < 1 || equipoAEditar > equiposCreados.size()) {
+        equipoAEditar = leerEntero("Seleccione un equipo que este creado: ");
+    }
+
+    vector<soldado> equipo = equiposCreados[equipoAEditar - 1];
+    editarSoldado(equipo);
+    equiposCreados[equipoAEditar - 1] = equipo;
+
+    cout << "\nEquipo editado con éxito." << endl;
+
+    char opcion = leerChar("Desea editar otro equipo? (s/n): ");
+    if (opcion == 's') {
+        editarEquipo(equiposCreados);
+    }
+    else {
+        return;
+    }
+
+}
+
+int calcularDanoZombies(estacion* est) {
+    int totalDano = 0;
+    for (const zombieFortaleza& zf : est->zombies) {
+        totalDano += zf.zombie->ataque;
+    }
+    return totalDano;
+}
+
+vector<string> estacionSiguienteConMenosDano(estacion* inicio, const string& destino) {
+    if (inicio == nullptr) {
+        cout << "No hay estaciones en el mapa." << endl;
+        return {};
+    }
+
+    // Priority queue: compara por daño acumulado
+    priority_queue<pair<estacion*, int>, vector<pair<estacion*, int>>, CompararEstaciones> pq;
+
+    // Mapa para registrar el daño mínimo acumulado
+    unordered_map<string, int> dano;
+    unordered_map<string, string> predecesores;
+    unordered_map<string, estacion*> mapaEstaciones;
+
+    // Inicialización de datos
+    for (estacion* temp = inicio; temp != nullptr; temp = temp->siguiente) {
+        dano[temp->nombre] = INT_MAX;
+        predecesores[temp->nombre] = "";
+        mapaEstaciones[temp->nombre] = temp;
+    }
+
+    dano[inicio->nombre] = 0;
+    pq.push({ inicio, 0 });
+
+    while (!pq.empty()) {
+        estacion* actual = pq.top().first;
+        int danoActual = pq.top().second;
+        pq.pop();
+
+        // Si llegamos a la estación destino, reconstruir el camino
+        if (actual->nombre == destino) {
+            vector<string> camino;
+            string actualNombre = destino;
+            while (actualNombre != "") {
+                camino.insert(camino.begin(), actualNombre);
+                actualNombre = predecesores[actualNombre];
+            }
+            return camino;
+        }
+
+        // Explorar estaciones adyacentes
+        for (const estacionesAdyacentes& adyacente : actual->ady) {
+            estacion* vecino = mapaEstaciones[adyacente.destino];
+            if (vecino == nullptr) continue;
+
+            // Calcula el nuevo daño acumulado causado por los zombies
+            int nuevoDano = danoActual + calcularDanoZombies(actual);
+
+            if (nuevoDano < dano[adyacente.destino]) {
+                dano[adyacente.destino] = nuevoDano;
+                predecesores[adyacente.destino] = actual->nombre;
+                pq.push({ vecino, nuevoDano });
+            }
+        }
+    }
+
+    cout << "No se encontró un camino a la estación destino." << endl;
+    return {};
 }
 
 void eliminarSoldadoDeEquipo(vector<vector<soldado>>& equiposCreados) {
@@ -383,65 +452,66 @@ void eliminarSoldadoDeEquipo(vector<vector<soldado>>& equiposCreados) {
     char opcion = leerChar("Desea eliminar otro soldado de un equipo? (s/n): ");
     if (opcion == 's') {
         eliminarSoldadoDeEquipo(equiposCreados);
-    } else {
+    }
+    else {
         return;
     }
 }
 
-int numeroSoldadoMenosVida(vector<soldado>soldados){
-	int vida = INT_MAX;
-	int numero = 0;
-	for (int i = 0; i < soldados.size(); i++) {
-		if (soldados[i].salud < vida) {
-			vida = soldados[i].salud;
-			numero = i;
-		}
-	}
-	return numero;
+int numeroSoldadoMenosVida(vector<soldado>soldados) {
+    int vida = INT_MAX;
+    int numero = 0;
+    for (int i = 0; i < soldados.size(); i++) {
+        if (soldados[i].salud < vida) {
+            vida = soldados[i].salud;
+            numero = i;
+        }
+    }
+    return numero;
 }
 
-void recogerArmaDeSoldadoMuerto(vector<soldado>&equipo,soldado& soldadoMuerto) {
-	bool espacioEnMochila = false;
+void recogerArmaDeSoldadoMuerto(vector<soldado>& equipo, soldado& soldadoMuerto) {
+    bool espacioEnMochila = false;
     //buscar el soldado muerto
-	int numero = 0;
-	for (int i = 0; i < equipo.size(); i++) {
-		if (equipo[i].nombre == soldadoMuerto.nombre) {
-			numero = i;
-		}
-	}
-	//recoger las armas del soldado muerto
-	int cantidadAcc = soldadoMuerto.mochila.accesoriosConUsos.size();
-    
+    int numero = 0;
+    for (int i = 0; i < equipo.size(); i++) {
+        if (equipo[i].nombre == soldadoMuerto.nombre) {
+            numero = i;
+        }
+    }
+    //recoger las armas del soldado muerto
+    int cantidadAcc = soldadoMuerto.mochila.accesoriosConUsos.size();
+
+    for (int i = 0; i < equipo.size(); i++)
+    {
+        soldado soldadoActual = equipo[i];
+        if (soldadoActual.mochila.capacidad > 0) {
+            espacioEnMochila = true;
+        }
+    }
+    if (espacioEnMochila) {
         for (int i = 0; i < equipo.size(); i++)
         {
-			soldado soldadoActual = equipo[i];
-            if (soldadoActual.mochila.capacidad > 0) {
-                espacioEnMochila = true;
-            }
-        }
-		if (espacioEnMochila) {
-            for (int i = 0; i < equipo.size(); i++)
-            {
-                if (i != numero) {
-                    soldado soldadoActual = equipo[i];
-                    if (soldadoActual.mochila.capacidad > 0) {
-						while (soldadoActual.mochila.capacidad >= cantidadAcc){
-                            for (int j = 0; j < cantidadAcc; j++) {
-                                usos accesorio = soldadoMuerto.mochila.accesoriosConUsos[j];
-                                cout << "Accesorio recogido con éxito por el soldado: " << soldadoActual.nombre << ", recogio: " << accesorio.accesorioPtr->nombre << endl;
-                                agregarAccesorio(soldadoActual.mochila, accesorio);
-                            }
+            if (i != numero) {
+                soldado soldadoActual = equipo[i];
+                if (soldadoActual.mochila.capacidad > 0) {
+                    while (soldadoActual.mochila.capacidad >= cantidadAcc) {
+                        for (int j = 0; j < cantidadAcc; j++) {
+                            usos accesorio = soldadoMuerto.mochila.accesoriosConUsos[j];
+                            cout << "Accesorio recogido con éxito por el soldado: " << soldadoActual.nombre << ", recogio: " << accesorio.accesorioPtr->nombre << endl;
+                            agregarAccesorio(soldadoActual.mochila, accesorio);
                         }
-                        
                     }
+
                 }
             }
-		}
-		else {
-			cout << "No hay espacio en la mochila para recoger las armas." << endl;
-		}
+        }
+    }
+    else {
+        cout << "No hay espacio en la mochila para recoger las armas." << endl;
+    }
 
-	
+
 }
 
 
@@ -452,7 +522,7 @@ void recogerArmaDeSoldadoMuerto(vector<soldado>&equipo,soldado& soldadoMuerto) {
 vector<zombie*> crearTiposZombies() {
     vector<zombie*> zombies;
 
-    
+
     zombies.push_back(new zombie{ "Corredor",
         "Estos zombies son extremadamente rápidos y ágiles, capaces de perseguir a sus presas a altas velocidades. Podrían ser el resultado de una mutación que aceleró su metabolismo.",
         10 });
@@ -476,10 +546,10 @@ vector<zombie*> crearTiposZombies() {
     return zombies;
 }
 
-void liberarMemoria(vector<zombieFortaleza>& zombies) {
+void liberarMemoriaZombies(vector<zombieFortaleza>& zombies) {
     for (auto& z : zombies) {
-        delete z.zombie; 
-        z.zombie = nullptr; 
+        delete z.zombie;
+        z.zombie = nullptr;
     }
 }
 
@@ -489,7 +559,7 @@ vector<zombieFortaleza> crearZombiesConFortaleza() {
 
     for (auto& z : zombies) {
         zombieFortaleza zFortaleza;
-        zFortaleza.zombie = z;  
+        zFortaleza.zombie = z;
 
         if (z->nombre == "Corredor") {
             zFortaleza.fortaleza = 50;
@@ -526,13 +596,13 @@ void zombiesUsuario(vector<zombieFortaleza>& zombiesCreados) {
 
     while (opcion<0 || opcion> zombies.size()) {
         opcion = leerEntero("Ingrese opción valida: ");
-        
+
     }
     zombiesCreados.push_back(zombies[opcion - 1]);
     cout << "\nZombie creado con éxito." << endl;
     char opcion1 = leerChar("Desea crear otro zombie? (s/n): ");
     if (opcion1 == 's') {
-		zombiesUsuario(zombiesCreados); 
+        zombiesUsuario(zombiesCreados);
     }
     else {
         return;
@@ -550,7 +620,6 @@ void mostrarZombies(const vector<zombieFortaleza>& zombies) {
             indice++;
             cout << "\nZombie #" << indice << endl;
             cout << "Nombre: " << z.zombie->nombre << endl;
-            cout << "Descripción: " << z.zombie->descripcion << endl;
             cout << "Ataque: " << z.zombie->ataque << endl;
             cout << "Fortaleza: " << z.fortaleza << endl;
             cout << endl;
@@ -565,30 +634,30 @@ void mostrarZombies(const vector<zombieFortaleza>& zombies) {
     }
 }
 
-int zombieMayorVida(const vector<zombieFortaleza>& zombies){
+int zombieMayorVida(const vector<zombieFortaleza>& zombies) {
     int mayor = 0;
-	for (int i = 0; i < zombies.size(); i++) {
-		if (zombies[i].fortaleza > mayor) {
-			mayor = zombies[i].fortaleza;
-		}
-	}
-	return mayor;
+    for (int i = 0; i < zombies.size(); i++) {
+        if (zombies[i].fortaleza > mayor) {
+            mayor = zombies[i].fortaleza;
+        }
+    }
+    return mayor;
 }
 
 vector<zombieFortaleza> zombiesAleatorios() {
-	vector<zombieFortaleza> zombies = crearZombiesConFortaleza();
-	vector<zombieFortaleza> zombiesAleatorios;
-	int cantidadZombies = generarNumeroAleatorio(5);
+    vector<zombieFortaleza> zombies = crearZombiesConFortaleza();
+    vector<zombieFortaleza> zombiesAleatorios;
+    int cantidadZombies = generarNumeroAleatorio(5);
     while (cantidadZombies < 1) {
-		cantidadZombies = generarNumeroAleatorio(5);
+        cantidadZombies = generarNumeroAleatorio(5);
 
     }
-	for (int i = 0; i < cantidadZombies; i++) {
-		int indice = generarNumeroAleatorio(zombies.size());
+    for (int i = 0; i < cantidadZombies; i++) {
+        int indice = generarNumeroAleatorio(zombies.size());
 
-		zombiesAleatorios.push_back(zombies[indice]);
-	}
-	return zombiesAleatorios;
+        zombiesAleatorios.push_back(zombies[indice]);
+    }
+    return zombiesAleatorios;
 }
 
 //accesorios funciones
@@ -678,7 +747,7 @@ vector<accesorio*> crearVectorDefensas() {
 };
 
 vector<accesorio*> crearVectorSalud() {
-    
+
     vector<accesorio*> salud;
 
     salud.push_back(new accesorio{
@@ -711,9 +780,9 @@ vector<accesorio*> crearVectorSalud() {
 
 void mostrarAccesorios(vector<accesorio*> accesorios) {
     int indice = 1;
-	if (accesorios.size() <= 0) {
-		cout << "No hay accesorios creados." << endl;
-		return;
+    if (accesorios.size() <= 0) {
+        cout << "No hay accesorios creados." << endl;
+        return;
     }
     else {
         for (auto& a : accesorios) {
@@ -730,9 +799,9 @@ void mostrarAccesorios(vector<accesorio*> accesorios) {
 
 void mostrarAccesoriosConUsos(vector<usos> accesorios) {
     int indice = 1;
-	if (accesorios.size() <= 0) {
-		cout << "No hay accesorios creados." << endl;
-		return;
+    if (accesorios.size() <= 0) {
+        cout << "No hay accesorios creados." << endl;
+        return;
     }
     else {
         for (auto& a : accesorios) {
@@ -754,28 +823,28 @@ void armasUsuarioCrear(vector<usos>& armasCreadas) {
     int opcionArma;
     int contadorUsos;
     char seguir;
-	opcionArma =leerEntero("Seleccione el número del arma que desea agregar: ");
+    opcionArma = leerEntero("Seleccione el número del arma que desea agregar: ");
     while (opcionArma < 1 || opcionArma > armas.size()) {
-		opcionArma =leerEntero("Opción no válida. Inténtelo de nuevo: ");
+        opcionArma = leerEntero("Opción no válida. Inténtelo de nuevo: ");
     }
-	contadorUsos = leerEntero("Ingrese la cantidad de usos del arma: ");
+    contadorUsos = leerEntero("Ingrese la cantidad de usos del arma: ");
     while (contadorUsos < 0) {
-		contadorUsos =leerEntero("La cantidad de usos debe ser mayor o igual a 0. Ingrese un valor válido: ");
+        contadorUsos = leerEntero("La cantidad de usos debe ser mayor o igual a 0. Ingrese un valor válido: ");
     }
     accesorio* arma = armas[opcionArma - 1];
     armasCreadas.push_back({ arma, contadorUsos });
     cout << "\nArma creada con exito" << endl;
     mostrarAccesoriosConUsos(armasCreadas);
-    
 
-	seguir = leerChar("Seguir creando armas? (s/n): ");  
 
-	if (seguir == 's') {
-		armasUsuarioCrear(armasCreadas);
-	}
-	else {
-		return;
-	}
+    seguir = leerChar("Seguir creando armas? (s/n): ");
+
+    if (seguir == 's') {
+        armasUsuarioCrear(armasCreadas);
+    }
+    else {
+        return;
+    }
 
 }
 
@@ -862,7 +931,7 @@ void modificarAccesorio(vector<usos>& accesorios) {
     accesorios[opcionModificar - 1].usos = contadorUsos;
 
     cout << "Accesorio modificado con éxito. Nueva información:" << endl;
-    mostrarAccesoriosConUsos(accesorios);  
+    mostrarAccesoriosConUsos(accesorios);
 }
 
 void eliminarAccesorio(vector<usos>& accesorios) {
@@ -870,17 +939,17 @@ void eliminarAccesorio(vector<usos>& accesorios) {
     int opcionEliminar;
     opcionEliminar = leerEntero("Ingrese el accesorio que quiere eliminar");
     while (opcionEliminar < 1 || opcionEliminar > accesorios.size()) {
-		opcionEliminar = leerEntero("Opción no válida. Inténtelo de nuevo: ");
+        opcionEliminar = leerEntero("Opción no válida. Inténtelo de nuevo: ");
     }
     accesorios.erase(accesorios.begin() + opcionEliminar - 1);
     cout << "Accesorio eliminado con éxito." << endl;
 }
 
 void limpiarMemoria(vector<usos>& accesorios) {
-	for (auto& a : accesorios) {
-		delete a.accesorioPtr;
-		a.accesorioPtr = nullptr;
-	}
+    for (auto& a : accesorios) {
+        delete a.accesorioPtr;
+        a.accesorioPtr = nullptr;
+    }
 }
 
 //mochila funciones
@@ -911,56 +980,56 @@ void agregarAccesorioCualquierSoldado(vector<vector<soldado>>& equiposCreados, v
     while (soldadoSeleccionado < 1 || soldadoSeleccionado > equipo.size()) {
         soldadoSeleccionado = leerEntero("Número de soldado no válido. Intente nuevamente: ");
     }
-	if (equipo[soldadoSeleccionado - 1].mochila.capacidad == 0) {
-		cout << "\nLa mochila del soldado seleccionado está llena. No se pueden agregar más accesorios." << endl;
-		char opcion = leerChar("¿Desea agregar accesorios a otro soldado? (s/n): ");
+    if (equipo[soldadoSeleccionado - 1].mochila.capacidad == 0) {
+        cout << "\nLa mochila del soldado seleccionado está llena. No se pueden agregar más accesorios." << endl;
+        char opcion = leerChar("¿Desea agregar accesorios a otro soldado? (s/n): ");
         if (opcion == 's') {
             agregarAccesorioCualquierSoldado(equiposCreados, accesoriosCreados);
 
         }
-		else {
-			return;
-		}
-	}
+        else {
+            return;
+        }
+    }
 
-    
+
     mostrarAccesoriosConUsos(accesoriosCreados);
 
     int accesorioSeleccionado = leerEntero("Seleccione el número del accesorio: ");
     while (accesorioSeleccionado < 1 || accesorioSeleccionado > accesoriosCreados.size()) {
         accesorioSeleccionado = leerEntero("Número de accesorio no válido. Intente nuevamente: ");
     }
-	
-	if (std::find(equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.begin(), equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.end(), accesoriosCreados[accesorioSeleccionado - 1]) != equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.end()) {
+
+    if (std::find(equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.begin(), equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.end(), accesoriosCreados[accesorioSeleccionado - 1]) != equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos.end()) {
         vector<usos> inventario = equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos;
-		usos accesorio = accesoriosCreados[accesorioSeleccionado - 1];
+        usos accesorio = accesoriosCreados[accesorioSeleccionado - 1];
         for (int i = 0; i < inventario.size(); i++)
         {
             if (inventario[i].accesorioPtr->nombre == accesorio.accesorioPtr->nombre &&
                 (accesorio.accesorioPtr->tipo != "Defensa" &&
                     accesorio.accesorioPtr->tipo != "Arma blanca" &&
                     accesorio.accesorioPtr->tipo != "Arma contundente" &&
-                    accesorio.accesorioPtr->tipo != "Arma improvisada" 
+                    accesorio.accesorioPtr->tipo != "Arma improvisada"
                     )) {
 
-				cout << "\nEl accesorio ya está en la mochila del soldado seleccionado. Se le sumaran los usos al accesorio" << endl;
-				inventario[i].usos += accesorio.usos;
+                cout << "\nEl accesorio ya está en la mochila del soldado seleccionado. Se le sumaran los usos al accesorio" << endl;
+                inventario[i].usos += accesorio.usos;
                 accesoriosCreados.erase(accesoriosCreados.begin() + accesorioSeleccionado - 1);
-				equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos = inventario;
-				cout << "\nAccesorio agregado con éxito." << endl;
-				char continuar = leerChar("¿Desea agregar otro accesorio? (s/n): ");
-				if (continuar == 's' || continuar == 'S') {
-					agregarAccesorioCualquierSoldado(equiposCreados, accesoriosCreados);
-				}
-				else {
-					return;
-				}
-				return;
+                equipo[soldadoSeleccionado - 1].mochila.accesoriosConUsos = inventario;
+                cout << "\nAccesorio agregado con éxito." << endl;
+                char continuar = leerChar("¿Desea agregar otro accesorio? (s/n): ");
+                if (continuar == 's' || continuar == 'S') {
+                    agregarAccesorioCualquierSoldado(equiposCreados, accesoriosCreados);
+                }
+                else {
+                    return;
+                }
+                return;
 
-			}
+            }
 
         }
-	}
+    }
     // Agregar accesorio al soldado
     agregarAccesorio(equipo[soldadoSeleccionado - 1].mochila, accesoriosCreados[accesorioSeleccionado - 1]);
     accesoriosCreados.erase(accesoriosCreados.begin() + accesorioSeleccionado - 1);
@@ -1038,14 +1107,21 @@ void eliminarDeMochila(vector<vector<soldado>>& equiposCreados) {
 }
 
 bool buscarDefensaMochila(mochila mochila) {
-	for (auto& a : mochila.accesoriosConUsos) {
-		if (a.accesorioPtr->tipo == "Defensa") {
-			return true;
-		}
-	}
-	return false;
+    for (auto& a : mochila.accesoriosConUsos) {
+        if (a.accesorioPtr->tipo == "Defensa") {
+            return true;
+        }
+    }
+    return false;
 }
 //mapa funciones
+int calcularFortalezaZombies(const estacion* est) {
+    int total = 0;
+    for (const zombieFortaleza& zf : est->zombies) {
+        total += zf.fortaleza;
+    }
+    return total;
+}
 
 void mostrarEstaciones(estacion*& inicio) {
     if (inicio == nullptr) {
@@ -1078,8 +1154,8 @@ void mostrarEstaciones(estacion*& inicio) {
     }
 }
 
-void agregarAdyacente(estacion & origen, string destino, int distancia) {
-    estacionesAdyacentes conexion = { destino, distancia};
+void agregarAdyacente(estacion& origen, string destino, int distancia) {
+    estacionesAdyacentes conexion = { destino, distancia };
     origen.ady.push_back(conexion);
 }
 
@@ -1168,9 +1244,9 @@ void agregarZombieAEstacion(estacion*& inicio, vector<zombieFortaleza>& zombies)
         opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
     }
 
-    
+
     estacion* temp = inicio;
-    for (int i = 1; i < opcionEstacion; i++) {  
+    for (int i = 1; i < opcionEstacion; i++) {
         if (temp == nullptr) {
             cout << "Error: No se encontró la estación." << endl;
             return;
@@ -1184,115 +1260,115 @@ void agregarZombieAEstacion(estacion*& inicio, vector<zombieFortaleza>& zombies)
     }
 
     cout << "\n--- Tipos de Zombies ---" << endl;
-    mostrarZombies(zombies); 
+    mostrarZombies(zombies);
 
     int opcionZombie = leerEntero("Seleccione el número del zombie que desea agregar: ");
     while (opcionZombie < 1 || opcionZombie > zombies.size()) {
         opcionZombie = leerEntero("Número de zombie no válido. Intente nuevamente: ");
     }
-	int cantidadZombies = leerEntero("Ingrese la cantidad de zombies de este tipo: ");
+    int cantidadZombies = leerEntero("Ingrese la cantidad de zombies de este tipo: ");
 
 
     zombieFortaleza zombieSeleccionado = zombies[opcionZombie - 1];
-	for (int i = 0; i < cantidadZombies; i++) {
-		temp->zombies.push_back(zombieSeleccionado);
-	}
+    for (int i = 0; i < cantidadZombies; i++) {
+        temp->zombies.push_back(zombieSeleccionado);
+    }
 
     cout << "\nZombies agregado con éxito." << endl;
 
     char continuar = leerChar("¿Desea agregar otro zombie a una estación? (s/n): ");
     if (continuar == 's' || continuar == 'S') {
-        agregarZombieAEstacion(inicio, zombies); 
+        agregarZombieAEstacion(inicio, zombies);
     }
     else {
         return;
     }
 }
 
-void modificarEstacion(estacion*& inicio,vector<zombieFortaleza>zombiesCreados) {
-	if (inicio == nullptr) {
-		cout << "\nNo hay estaciones creadas." << endl;
-		return;
-	}
-	cout << "\n--- Estaciones Disponibles ---" << endl;
-	mostrarEstaciones(inicio);
-	int opcionEstacion = leerEntero("Seleccione el número de la estación que desea modificar: ");
-	while (opcionEstacion < 1) {
-		opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
-	}
-	estacion* temp = inicio;
-	for (int i = 0; i < opcionEstacion; i++) {
-		temp = temp->siguiente;
-	}
-	cout << "\nEstación seleccionada: " << temp->nombre << endl;
-	char opcionModificar = leerChar("¿Qué desea modificar? (n: nombre, z: zombies, c: conexiones): ");
-	if (opcionModificar == 'n' || opcionModificar == 'N') {
-		string nuevoNombre = leerString("Ingrese el nuevo nombre de la estación: ");
-		temp->nombre = nuevoNombre;
-		cout << "\nNombre de la estación modificado con éxito." << endl;
-	}
-	else if (opcionModificar == 'z' || opcionModificar == 'Z') {
-		if (zombiesCreados.empty()) {
-			cout << "\nNo hay zombies creados." << endl;
-			return;
-		}
-		cout << "\n--- Tipos de Zombies ---" << endl;
-		mostrarZombies(zombiesCreados);
-		int opcionZombie = leerEntero("Seleccione el número del zombie que desea agregar: ");
-		while (opcionZombie < 1 || opcionZombie > zombiesCreados.size()) {
-			opcionZombie = leerEntero("Número de zombie no válido. Intente nuevamente: ");
-		}
-		zombieFortaleza zombie = zombiesCreados[opcionZombie - 1];
-		temp->zombies.push_back(zombie);
-		cout << "\nZombie agregado con éxito." << endl;
-	}
-	else if (opcionModificar == 'c' || opcionModificar == 'C') {
-		cout << "\n--- Estaciones Disponibles ---" << endl;
-		mostrarEstaciones(inicio);
-		int opcionEstacion2 = leerEntero("Seleccione el número de la estación a la que desea agregar una conexión: ");
-		while (opcionEstacion2 < 1) {
-			opcionEstacion2 = leerEntero("Número de estación no válido. Intente nuevamente: ");
-		}
-		estacion* temp2 = inicio;
-		for (int i = 0; i < opcionEstacion2; i++) {
-			temp2 = temp2->siguiente;
-		}
-		int distancia = leerEntero("Ingrese la distancia entre las estaciones: ");
-		agregarAdyacente(*temp, temp2->nombre, distancia);
-		cout << "\nConexión agregada con éxito." << endl;
-	}
-	else {
-		cout << "\nOpción no válida." << endl;
+void modificarEstacion(estacion*& inicio, vector<zombieFortaleza>zombiesCreados) {
+    if (inicio == nullptr) {
+        cout << "\nNo hay estaciones creadas." << endl;
+        return;
+    }
+    cout << "\n--- Estaciones Disponibles ---" << endl;
+    mostrarEstaciones(inicio);
+    int opcionEstacion = leerEntero("Seleccione el número de la estación que desea modificar: ");
+    while (opcionEstacion < 1) {
+        opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
+    }
+    estacion* temp = inicio;
+    for (int i = 0; i < opcionEstacion; i++) {
+        temp = temp->siguiente;
+    }
+    cout << "\nEstación seleccionada: " << temp->nombre << endl;
+    char opcionModificar = leerChar("¿Qué desea modificar? (n: nombre, z: zombies, c: conexiones): ");
+    if (opcionModificar == 'n' || opcionModificar == 'N') {
+        string nuevoNombre = leerString("Ingrese el nuevo nombre de la estación: ");
+        temp->nombre = nuevoNombre;
+        cout << "\nNombre de la estación modificado con éxito." << endl;
+    }
+    else if (opcionModificar == 'z' || opcionModificar == 'Z') {
+        if (zombiesCreados.empty()) {
+            cout << "\nNo hay zombies creados." << endl;
+            return;
+        }
+        cout << "\n--- Tipos de Zombies ---" << endl;
+        mostrarZombies(zombiesCreados);
+        int opcionZombie = leerEntero("Seleccione el número del zombie que desea agregar: ");
+        while (opcionZombie < 1 || opcionZombie > zombiesCreados.size()) {
+            opcionZombie = leerEntero("Número de zombie no válido. Intente nuevamente: ");
+        }
+        zombieFortaleza zombie = zombiesCreados[opcionZombie - 1];
+        temp->zombies.push_back(zombie);
+        cout << "\nZombie agregado con éxito." << endl;
+    }
+    else if (opcionModificar == 'c' || opcionModificar == 'C') {
+        cout << "\n--- Estaciones Disponibles ---" << endl;
+        mostrarEstaciones(inicio);
+        int opcionEstacion2 = leerEntero("Seleccione el número de la estación a la que desea agregar una conexión: ");
+        while (opcionEstacion2 < 1) {
+            opcionEstacion2 = leerEntero("Número de estación no válido. Intente nuevamente: ");
+        }
+        estacion* temp2 = inicio;
+        for (int i = 0; i < opcionEstacion2; i++) {
+            temp2 = temp2->siguiente;
+        }
+        int distancia = leerEntero("Ingrese la distancia entre las estaciones: ");
+        agregarAdyacente(*temp, temp2->nombre, distancia);
+        cout << "\nConexión agregada con éxito." << endl;
+    }
+    else {
+        cout << "\nOpción no válida." << endl;
 
-	}
-	
+    }
+
 }
 
 void eliminarEstacion(estacion*& inicio) {
-	if (inicio == nullptr) {
-		cout << "\nNo hay estaciones creadas." << endl;
-		return;
-	}
-	cout << "\n--- Estaciones Disponibles ---" << endl;
-	mostrarEstaciones(inicio);
-	int opcionEstacion = leerEntero("Seleccione el número de la estación que desea eliminar: ");
-	while (opcionEstacion < 1) {
-		opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
-	}
-	estacion* temp = inicio;
-	estacion* anterior = nullptr;
-	for (int i = 0; i < opcionEstacion - 1; i++) {
-		anterior = temp;
-		temp = temp->siguiente;
-	}
-	if (anterior == nullptr) {
-		inicio = temp->siguiente;
-	}
-	else {
-		anterior->siguiente = temp->siguiente;
-	}
-	delete temp;
-	cout << "\nEstación eliminada con éxito." << endl;
+    if (inicio == nullptr) {
+        cout << "\nNo hay estaciones creadas." << endl;
+        return;
+    }
+    cout << "\n--- Estaciones Disponibles ---" << endl;
+    mostrarEstaciones(inicio);
+    int opcionEstacion = leerEntero("Seleccione el número de la estación que desea eliminar: ");
+    while (opcionEstacion < 1) {
+        opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
+    }
+    estacion* temp = inicio;
+    estacion* anterior = nullptr;
+    for (int i = 0; i < opcionEstacion - 1; i++) {
+        anterior = temp;
+        temp = temp->siguiente;
+    }
+    if (anterior == nullptr) {
+        inicio = temp->siguiente;
+    }
+    else {
+        anterior->siguiente = temp->siguiente;
+    }
+    delete temp;
+    cout << "\nEstación eliminada con éxito." << endl;
 
 }
 
@@ -1324,7 +1400,7 @@ vector<string> encontrarCaminoMasCorto(estacion* inicio, const string& destinoNo
             vector<string> camino;
             string actualNombre = destinoNombre;
             while (actualNombre != "") {
-                camino.insert(camino.begin(), actualNombre);  
+                camino.insert(camino.begin(), actualNombre);
                 actualNombre = predecesores[actualNombre];
             }
             return camino;
@@ -1351,74 +1427,164 @@ vector<string> encontrarCaminoMasCorto(estacion* inicio, const string& destinoNo
     return {};
 }
 
-estacion* moverAEstacionSiguiente(estacion* inicio, const string& destinoNombre) {
-	if (inicio == nullptr) {
-		cout << "No hay estaciones en el mapa." << endl;
-		return nullptr;
-	}
-
-	vector<string> camino = encontrarCaminoMasCorto(inicio, destinoNombre);
-	if (camino.empty()) {
-		return nullptr;
-	}
-
-	estacion* temp = inicio;
-	for (const string& nombre : camino) {
-		while (temp != nullptr) {
-			if (temp->nombre == nombre) {
-				break;
-			}
-			temp = temp->siguiente;
-		}
-	}
-
-	return temp;
-}
-
-estacion* estacionSiguienteConMenosZombies(estacion* inicio) {
-    // Verificamos que la estación no sea nula
+vector<string> estacionSiguienteConMenosZombies(estacion* inicio, const string& destino) {
     if (inicio == nullptr) {
-        return nullptr;
+        cout << "No hay estaciones en el mapa." << endl;
+        return {};
     }
 
-    // Inicializamos la variable para almacenar la estación con menos zombies
-    estacion* estacionConMenosZombies = nullptr;
-    int cantidadMinimaZombies = INT_MAX;  // Comenzamos con un valor muy alto
+    // Priority queue: compara por cantidad de zombies acumulados
+    priority_queue<pair<estacion*, int>, vector<pair<estacion*, int>>, CompararEstaciones> pq;
 
-    // Recorremos las estaciones adyacentes de la estación inicial
-    for (const auto& adyacente : inicio->ady) {
-        // Buscamos la estación destino entre las estaciones adyacentes
-        estacion* estacionDestino = nullptr;
+    // Mapa para registrar la cantidad mínima de zombies acumulados
+    unordered_map<string, int> zombies;
+    unordered_map<string, string> predecesores;
+    unordered_map<string, estacion*> mapaEstaciones;
+
+    // Inicialización de datos
+    for (estacion* temp = inicio; temp != nullptr; temp = temp->siguiente) {
+        zombies[temp->nombre] = INT_MAX;
+        predecesores[temp->nombre] = "";
+        mapaEstaciones[temp->nombre] = temp;
+    }
+
+    zombies[inicio->nombre] = 0;
+    pq.push({ inicio, 0 });
+
+    while (!pq.empty()) {
+        estacion* actual = pq.top().first;
+        int zombiesActual = pq.top().second;
+        pq.pop();
+
+        // Si llegamos a la estación destino, reconstruir el camino
+        if (actual->nombre == destino) {
+            vector<string> camino;
+            string actualNombre = destino;
+            while (actualNombre != "") {
+                camino.insert(camino.begin(), actualNombre);
+                actualNombre = predecesores[actualNombre];
+            }
+            return camino;
+        }
+
+        // Explorar estaciones adyacentes
+        for (const estacionesAdyacentes& adyacente : actual->ady) {
+            estacion* vecino = mapaEstaciones[adyacente.destino];
+            if (vecino == nullptr) continue;
+
+            // Calcula la nueva cantidad de zombies acumulados
+            int nuevosZombies = zombiesActual + calcularFortalezaZombies(actual);
+
+            if (nuevosZombies < zombies[adyacente.destino]) {
+                zombies[adyacente.destino] = nuevosZombies;
+                predecesores[adyacente.destino] = actual->nombre;
+                pq.push({ vecino, nuevosZombies });
+            }
+        }
+    }
+
+    cout << "No se encontró un camino a la estación destino." << endl;
+    return {};
+}
+
+void nuevoMapa(estacion*& inicio, string destino) {
+    vector<string> caminoMenosZombies = estacionSiguienteConMenosZombies(inicio, destino);
+    vector<string> caminoMasCorto = encontrarCaminoMasCorto(inicio, destino);
+    vector<string> caminoMenosDano = estacionSiguienteConMenosDano(inicio, destino);
+
+    cout << "Elige una de las siguientes opciones: " << endl;
+    cout << "1. Camino con menos zombies:" << endl;
+    for (size_t i = 0; i < caminoMenosZombies.size(); i++) {
+        cout << caminoMenosZombies[i];
+        if (i < caminoMenosZombies.size() - 1) {
+            cout << " -> ";
+        }
+    }
+    cout << endl;
+
+    cout << "2. Camino más corto:" << endl;
+    for (size_t i = 0; i < caminoMasCorto.size(); i++) {
+        cout << caminoMasCorto[i];
+        if (i < caminoMasCorto.size() - 1) {
+            cout << " -> ";
+        }
+    }
+    cout << endl;
+
+    cout << "3. Camino de menos dano:" << endl;
+    for (size_t i = 0; i < caminoMenosDano.size(); i++) {
+        cout << caminoMenosDano[i];
+        if (i < caminoMenosDano.size() - 1) {
+            cout << " -> ";
+        }
+    }
+
+    // Leer la opción elegida
+    int opcion = leerEntero("\nIngrese la opción deseada: ");
+    while (opcion < 1 || opcion > 2) {
+        opcion = leerEntero("Opción no válida. Intente nuevamente: ");
+    }
+
+    // Seleccionar el camino basado en la opción
+    vector<string> caminoElegido;
+    if (opcion == 1) {
+        caminoElegido = caminoMenosZombies;
+    }
+    else if (opcion == 2) {
+        caminoElegido = caminoMasCorto;
+    }
+    else {
+        caminoElegido = caminoMenosDano;
+    }
+
+
+    // Crear una nueva lista basada en el camino elegido
+    estacion* nuevoInicio = nullptr;
+    estacion* actual = nullptr;
+
+    for (const string& nombre : caminoElegido) {
         estacion* temp = inicio;
-
-        // Recorremos la lista de estaciones para encontrar la estación destino
         while (temp != nullptr) {
-            if (temp->nombre == adyacente.destino) {
-                estacionDestino = temp;
+            if (temp->nombre == nombre) {
+                // Crear un nuevo nodo
+                estacion* nuevoNodo = new estacion{ temp->nombre, temp->cantidadZombies, nullptr, temp->zombies, temp->ady, temp->cura };
+                if (nuevoInicio == nullptr) {
+                    nuevoInicio = nuevoNodo;
+                    actual = nuevoInicio;
+                }
+                else {
+                    actual->siguiente = nuevoNodo;
+                    actual = nuevoNodo;
+                }
                 break;
             }
             temp = temp->siguiente;
         }
-
-        if (estacionDestino != nullptr && estacionDestino->cantidadZombies < cantidadMinimaZombies) {
-            // Actualizamos la estación con menos zombies
-            cantidadMinimaZombies = estacionDestino->cantidadZombies;
-            estacionConMenosZombies = estacionDestino;
-        }
     }
 
-    // Devolvemos la estación con menos zombies
-    return estacionConMenosZombies;
+    // Liberar la memoria de la lista antigua (opcional si no se reutiliza)
+    while (inicio != nullptr) {
+        estacion* temp = inicio;
+        inicio = inicio->siguiente;
+        delete temp;
+    }
+
+    // Actualizar el inicio de la lista con la nueva lista
+    inicio = nuevoInicio;
+
+    // Mostrar las estaciones en el nuevo mapa
+    cout << "El mapa donde juegas ahora es: " << endl;
+    mostrarEstaciones(inicio);
 }
 
 int contarEstaciones(estacion* inicio) {
     int cont = 0;
-	estacion* temp = inicio;
-	while (temp != nullptr) {
-		cont++;
-		temp = temp->siguiente;
-	}
-	return cont;
+    estacion* temp = inicio;
+    while (temp != nullptr) {
+        cont++;
+        temp = temp->siguiente;
+    }
+    return cont;
 }
 
 void crearMapaDiezEstaciones(estacion*& inicio) {
@@ -1541,21 +1707,21 @@ void crearMapaDiezEstaciones(estacion*& inicio) {
     agregarAdyacente(*estacion10, "Estación 9", 3);
     agregarAdyacente(*estacion10, "Estación 3", 15);
 
-	//Meter zombies
-	while (estacion1 != nullptr) {
-		estacion1->zombies = zombiesAleatorios();
-		estacion1 = estacion1->siguiente;
-	}
+    //Meter zombies
+    while (estacion1 != nullptr) {
+        estacion1->zombies = zombiesAleatorios();
+        estacion1 = estacion1->siguiente;
+    }
 
 
 }
 
 void limpiarMemoriaest(estacion*& inicio) {
-	while (inicio != nullptr) {
-		estacion* temp = inicio;
-		inicio = inicio->siguiente;
-		delete temp;
-	}
+    while (inicio != nullptr) {
+        estacion* temp = inicio;
+        inicio = inicio->siguiente;
+        delete temp;
+    }
 }
 
 //batalla funciones
@@ -1583,27 +1749,27 @@ vector<vector<soldado>>crearTresEquipos() {
 
     for (int i = 0; i < equipos.size(); i++) {
 
-        
-        for (int j = 0; j < equipos[i].size(); j++) {
-            int indiceArma = generarNumeroAleatorio( armas.size() - 1);
-			int indiceDefensa = generarNumeroAleatorio( defensas.size() - 1);
-			int indiceSalud = generarNumeroAleatorio( salud.size() - 1);
-			int usosArma = generarNumeroAleatorio(5);
-			int usosDefensa = generarNumeroAleatorio(5);
-			int usosSalud = generarNumeroAleatorio(5);
-			while (usosArma == 0) {
-				usosArma = generarNumeroAleatorio(5);
-			}
-			while (usosDefensa == 0) {
-				usosDefensa = generarNumeroAleatorio(5);
-			}
-			while (usosSalud == 0) {
-				usosSalud = generarNumeroAleatorio(5);
-			}
 
-			equipos[i][j].mochila.accesoriosConUsos.push_back({ armas[indiceArma], usosArma });
-			equipos[i][j].mochila.accesoriosConUsos.push_back({ defensas[indiceDefensa], usosDefensa });
-			equipos[i][j].mochila.accesoriosConUsos.push_back({ salud[indiceSalud], usosSalud });
+        for (int j = 0; j < equipos[i].size(); j++) {
+            int indiceArma = generarNumeroAleatorio(armas.size() - 1);
+            int indiceDefensa = generarNumeroAleatorio(defensas.size() - 1);
+            int indiceSalud = generarNumeroAleatorio(salud.size() - 1);
+            int usosArma = generarNumeroAleatorio(5);
+            int usosDefensa = generarNumeroAleatorio(5);
+            int usosSalud = generarNumeroAleatorio(5);
+            while (usosArma == 0) {
+                usosArma = generarNumeroAleatorio(5);
+            }
+            while (usosDefensa == 0) {
+                usosDefensa = generarNumeroAleatorio(5);
+            }
+            while (usosSalud == 0) {
+                usosSalud = generarNumeroAleatorio(5);
+            }
+
+            equipos[i][j].mochila.accesoriosConUsos.push_back({ armas[indiceArma], usosArma });
+            equipos[i][j].mochila.accesoriosConUsos.push_back({ defensas[indiceDefensa], usosDefensa });
+            equipos[i][j].mochila.accesoriosConUsos.push_back({ salud[indiceSalud], usosSalud });
 
             equipos[i][j].mochila.capacidad = 0;
         }
@@ -1612,38 +1778,38 @@ vector<vector<soldado>>crearTresEquipos() {
 
 }
 
-void meterZombiesRapido(estacion*&inicio, vector<zombieFortaleza>& zombies) {
-	    cout << "Estaciones Disponibles" << endl;
-	    mostrarEstaciones(inicio);
-	    int opcionEstacion = leerEntero("Seleccione el número de la estación en la que desea agregar zombies: ");
-	    while (opcionEstacion < 1) {
-		    opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
-	    }
-	    estacion* temp = inicio;
-	    for (int i = 0; i < opcionEstacion - 1; i++) {
-		    temp = temp->siguiente;
-	    }
-	    cout << "Zombies Disponibles" << endl;
-	    mostrarZombies(zombies);
-	    int opcionZombie = leerEntero("Seleccione el número del zombie que desea agregar: ");
-	    while (opcionZombie < 1 || opcionZombie > zombies.size()) {
-		    opcionZombie = leerEntero("Número de zombie no válido. Intente nuevamente: ");
-	    }
-	    zombieFortaleza zombie = zombies[opcionZombie - 1];
-	    int cantidadZombies = leerEntero("Ingrese la cantidad de zombies que desea agregar: ");
-	    while (cantidadZombies < 1) {
-		    cantidadZombies = leerEntero("Cantidad de zombies no válida. Intente nuevamente: ");
-	    }
-	    for (int i = 0; i < cantidadZombies; i++) {
-		    temp->zombies.push_back(zombie);
-	    }
-		char continuar = leerChar("¿Desea agregar más zombies a otra estación? (s/n): ");
-		if (continuar == 's' || continuar == 'S') {
-			meterZombiesRapido(inicio, zombies);
-		}
-		else {
-			return;
-		}
+void meterZombiesRapido(estacion*& inicio, vector<zombieFortaleza>& zombies) {
+    cout << "Estaciones Disponibles" << endl;
+    mostrarEstaciones(inicio);
+    int opcionEstacion = leerEntero("Seleccione el número de la estación en la que desea agregar zombies: ");
+    while (opcionEstacion < 1) {
+        opcionEstacion = leerEntero("Número de estación no válido. Intente nuevamente: ");
+    }
+    estacion* temp = inicio;
+    for (int i = 0; i < opcionEstacion - 1; i++) {
+        temp = temp->siguiente;
+    }
+    cout << "Zombies Disponibles" << endl;
+    mostrarZombies(zombies);
+    int opcionZombie = leerEntero("Seleccione el número del zombie que desea agregar: ");
+    while (opcionZombie < 1 || opcionZombie > zombies.size()) {
+        opcionZombie = leerEntero("Número de zombie no válido. Intente nuevamente: ");
+    }
+    zombieFortaleza zombie = zombies[opcionZombie - 1];
+    int cantidadZombies = leerEntero("Ingrese la cantidad de zombies que desea agregar: ");
+    while (cantidadZombies < 1) {
+        cantidadZombies = leerEntero("Cantidad de zombies no válida. Intente nuevamente: ");
+    }
+    for (int i = 0; i < cantidadZombies; i++) {
+        temp->zombies.push_back(zombie);
+    }
+    char continuar = leerChar("¿Desea agregar más zombies a otra estación? (s/n): ");
+    if (continuar == 's' || continuar == 'S') {
+        meterZombiesRapido(inicio, zombies);
+    }
+    else {
+        return;
+    }
 
 
 };
@@ -1658,7 +1824,7 @@ void usarDefensa(soldado& soldadoAtacado, zombieFortaleza& zombie) {
     cout << "\nOpciones de defensa disponibles:" << endl;
     for (int i = 0; i < soldadoAtacado.mochila.accesoriosConUsos.size(); i++) {
         if (soldadoAtacado.mochila.accesoriosConUsos[i].accesorioPtr->tipo == "Defensa") {
-            cout << i + 1 << ". " << soldadoAtacado.mochila.accesoriosConUsos[i].accesorioPtr->nombre << " (Usos: " << soldadoAtacado.mochila.accesoriosConUsos[i].usos << ")" <<soldadoAtacado.mochila.accesoriosConUsos[i].accesorioPtr->valor << endl;
+            cout << i + 1 << ". " << soldadoAtacado.mochila.accesoriosConUsos[i].accesorioPtr->nombre << " (Usos: " << soldadoAtacado.mochila.accesoriosConUsos[i].usos << ")" << soldadoAtacado.mochila.accesoriosConUsos[i].accesorioPtr->valor << endl;
 
         }
     }
@@ -1688,8 +1854,8 @@ void usarDefensa(soldado& soldadoAtacado, zombieFortaleza& zombie) {
 }
 
 void turnoZombies(vector<soldado>& equipo, vector<zombieFortaleza>& zombies, int& contadorDeAtaques) {
-    
-    
+
+
     int ataquesZombies = generarNumeroAleatorio(5);
     cout << "\nNúmero de ataques de los zombies en este turno: " << ataquesZombies << endl;
 
@@ -1702,7 +1868,7 @@ void turnoZombies(vector<soldado>& equipo, vector<zombieFortaleza>& zombies, int
         // Seleccionar el soldado a atacar
         int soldadoAtacar;
         if (contadorDeAtaques == 0) { // Primer turno: ataque aleatorio
-            soldadoAtacar = generarNumeroAleatorio(equipo.size()-1);
+            soldadoAtacar = generarNumeroAleatorio(equipo.size() - 1);
             cout << "\nAtaque aleatorio: El zombie atacará a un soldado al azar." << endl;
         }
         else { // Turnos posteriores: atacar al soldado con menos vida
@@ -1710,7 +1876,7 @@ void turnoZombies(vector<soldado>& equipo, vector<zombieFortaleza>& zombies, int
             cout << "\nAtaque dirigido: El zombie atacará al soldado con menos vida." << endl;
         }
 
-        int zombieAtaca = generarNumeroAleatorio(zombies.size()-1);
+        int zombieAtaca = generarNumeroAleatorio(zombies.size() - 1);
         zombieFortaleza& zombie = zombies[zombieAtaca];
         soldado& soldadoAtacado = equipo[soldadoAtacar];
 
@@ -1739,21 +1905,21 @@ void turnoZombies(vector<soldado>& equipo, vector<zombieFortaleza>& zombies, int
             }
         }
         else {
-            cout << "El soldado " << soldadoAtacado.nombre << " tiene de vida: " << soldadoAtacado.salud<<endl;
+            cout << "El soldado " << soldadoAtacado.nombre << " tiene de vida: " << soldadoAtacado.salud << endl;
         }
     }
 
-    
+
 }
 
 void turnoSoldados(vector<soldado>& equipo, vector<zombieFortaleza>& zombies) {
-	
 
-    for (size_t i = 0; i < 2; ++i) {
-        for (size_t i = 0; i < equipo.size(); ++i) {
+
+    for (size_t f = 0; f < 2; ++f) {
+        for (size_t j = 0; j < equipo.size(); ++j) {
             int mayorVidaZombie = zombieMayorVida(zombies);
 
-            soldado& soldadoActual = equipo[i];
+            soldado& soldadoActual = equipo[j];
             int valorAtaque = 0;
 
             // Caso: Sin accesorios en la mochila
@@ -1783,7 +1949,7 @@ void turnoSoldados(vector<soldado>& equipo, vector<zombieFortaleza>& zombies) {
             // Caso: Con accesorios en la mochila
             cout << "\nEl soldado " << soldadoActual.nombre << " tiene los siguientes accesorios: " << endl;
             int indice = 0;
-            for (int j = 0; j < soldadoActual.mochila.accesoriosConUsos.size(); ++j) {
+            for (int k = 0; k < soldadoActual.mochila.accesoriosConUsos.size(); ++k) {
                 indice += 1;
                 const auto& acc = soldadoActual.mochila.accesoriosConUsos[j];
                 cout << indice << ". " << acc.accesorioPtr->nombre << " con " << acc.usos << " usos (Tipo: " << acc.accesorioPtr->tipo << ")." << " valor:" << acc.accesorioPtr->valor << endl;
@@ -1805,10 +1971,10 @@ void turnoSoldados(vector<soldado>& equipo, vector<zombieFortaleza>& zombies) {
                         cout << "No puedes atacar con una defensa, selecciona otro accesorio." << endl;
                         continue;
                     }
-                    
+
                 }
                 //si dano es mayor que vida de soldado soldado no usa nada
-				if (opcionAccesorio <= indice) {
+                if (opcionAccesorio <= indice) {
                     if (soldadoActual.mochila.accesoriosConUsos[opcionAccesorio - 1].accesorioPtr->tipo.find("Arma") != string::npos) {
                         if (soldadoActual.mochila.accesoriosConUsos[opcionAccesorio - 1].accesorioPtr->valor > mayorVidaZombie) {
                             cout << "El arma seleccionada tiene un valor de ataque mayor a la vida del zombie con mayor vida, por lo que no se puede usar." << endl;
@@ -1866,6 +2032,10 @@ void turnoSoldados(vector<soldado>& equipo, vector<zombieFortaleza>& zombies) {
                     if (zombieAtacado.fortaleza <= 0) {
                         cout << "¡El zombie ha sido eliminado!" << endl;
                         zombies.erase(zombies.begin() + opcionZombie - 1);
+                        accesorioSeleccionado.usos--;
+                        if (accesorioSeleccionado.usos == 0) {
+                            soldadoActual.mochila.accesoriosConUsos.erase(soldadoActual.mochila.accesoriosConUsos.begin() + opcionAccesorio - 1);
+                        }
                         // Después de eliminar un zombie, asegúrate de que el índice de zombie esté ajustado
                         if (opcionZombie - 1 < zombies.size()) {
                             // Si hay zombies restantes, muestra la lista de zombies
@@ -1885,11 +2055,15 @@ void turnoSoldados(vector<soldado>& equipo, vector<zombieFortaleza>& zombies) {
                     valorAtaque = accesorioSeleccionado.accesorioPtr->valor;
                     soldadoActual.salud += valorAtaque;
                     if (soldadoActual.salud > 100) soldadoActual.salud = 100;
+                    accesorioSeleccionado.usos--;
                     cout << "El soldado " << soldadoActual.nombre << " ha sido curado. Su salud ahora es de " << soldadoActual.salud << "." << endl;
+                    if (accesorioSeleccionado.usos == 0) {
+                        soldadoActual.mochila.accesoriosConUsos.erase(soldadoActual.mochila.accesoriosConUsos.begin() + opcionAccesorio - 1);
+                    }
                 }
 
                 // Reducir usos del accesorio y eliminar si ya no tiene más
-                accesorioSeleccionado.usos -= 1;
+
                 if (accesorioSeleccionado.usos == 0) {
                     soldadoActual.mochila.accesoriosConUsos.erase(soldadoActual.mochila.accesoriosConUsos.begin() + opcionAccesorio - 1);
                 }
@@ -1918,46 +2092,47 @@ bool batalla(estacion* estacionActual, vector<bitacora>& registros, vector<solda
     //Batalla hasta que gane uno
     int contadorDeAtaques = 0;
     vector<zombieFortaleza> zombies = estacionActual->zombies;
-	int ronda = 1;
+    int ronda = 1;
     while (!equipo.empty() && !estacionActual->zombies.empty()) {
         //Turno de los soldados
-		cout << "\n---Ronda " << ronda << "---" << endl;
+        cout << "\n---Ronda " << ronda << "---" << endl;
         cout << "\n---Tu equipo en esta estacion---" << endl;
-		cout << "Estación: " << estacionActual->nombre << endl;
+        cout << "Estación: " << estacionActual->nombre << endl;
         mostrarSoldados(equipo);
 
         cout << "\n---Zombies restantes en la estacion---" << endl;
         //Humanos atacan 2 veces
         mostrarZombies(estacionActual->zombies);
-		turnoSoldados(equipo, estacionActual->zombies);
+        turnoSoldados(equipo, estacionActual->zombies);
         //Zombies Atacan
-		turnoZombies(equipo, estacionActual->zombies, contadorDeAtaques);
+        turnoZombies(equipo, estacionActual->zombies, contadorDeAtaques);
         contadorDeAtaques += 1;
-		ronda++;
+        ronda++;
     }
-	if (equipo.empty()) {
-		cout << "¡Los zombies han ganado la batalla!" << endl;
+    if (equipo.empty()) {
+        cout << "¡Los zombies han ganado la batalla!" << endl;
         bitacora registro;
         registro.estacion = estacionActual->nombre;
         registro.eventos.push_back("Los humanos han sido derrotados en la estación " + estacionActual->nombre + ".");
         registros.push_back(registro);
-		return false;
-	}
-	else {
+        return false;
+    }
+    else {
 
-		cout << "¡Los humanos han ganado la batalla!" << endl;
-		bitacora registro;
-		registro.estacion = estacionActual->nombre;
-		registro.eventos.push_back("Los humanos han ganado la batalla en la estación " + estacionActual->nombre + ".");
-		registros.push_back(registro);
-		return true;
-	}
+        cout << "¡Los humanos han ganado la batalla!" << endl;
+        bitacora registro;
+        registro.estacion = estacionActual->nombre;
+        registro.eventos.push_back("Los humanos han ganado la batalla en la estación " + estacionActual->nombre + ".");
+        registros.push_back(registro);
+        return true;
+    }
 
 
-    
+
 }
-    
+
 void jugar(estacion* inicio, vector<vector<soldado>>& equipos) {
+
     if (equipos.empty()) {
         cout << "No hay equipos disponibles para jugar." << endl;
         return;
@@ -1988,34 +2163,48 @@ void jugar(estacion* inicio, vector<vector<soldado>>& equipos) {
     mostrarEstaciones(inicio);
 
     // Seleccionar estación para la batalla
-	int cantidadEstaciones = contarEstaciones(inicio);
-	int estacionInicial = generarNumeroAleatorio(cantidadEstaciones);
-	while (estacionInicial < 1) {
-		estacionInicial = generarNumeroAleatorio(cantidadEstaciones);
-	}
-	estacion* estacionSeleccionada = inicio;
-	for (int i = 0; i < estacionInicial; i++) {
-		estacionSeleccionada = estacionSeleccionada->siguiente;
-	}
-	cout << "Estación seleccionada: " << estacionSeleccionada->nombre << endl;
+    int cantidadEstaciones = contarEstaciones(inicio);
+    int estacionInicial = generarNumeroAleatorio(cantidadEstaciones);
+    while (estacionInicial < 1) {
+        estacionInicial = generarNumeroAleatorio(cantidadEstaciones);
+    }
+    estacion* estacionSeleccionada = inicio;
+    for (int i = 0; i < estacionInicial; i++) {
+        estacionSeleccionada = estacionSeleccionada->siguiente;
+    }
+    cout << "Estación seleccionada: " << estacionSeleccionada->nombre << endl;
 
-	// Definir estación con cura aleatoria
-	int estacionConCura = generarNumeroAleatorio(cantidadEstaciones);
-	while (estacionConCura < 1) {
-		estacionConCura = generarNumeroAleatorio(cantidadEstaciones);
-	}
-	estacion* tempCura = inicio;
-	for (int i = 0; i < estacionConCura; i++) {
-		tempCura = tempCura->siguiente;
-	}
-	tempCura->cura = true;
-	cout << "La estación con cura es: " << tempCura->nombre << endl;
+    // Definir estación con cura aleatoria
+   // Generar una estación aleatoria con cura
+    int estacionConCura = generarNumeroAleatorio(cantidadEstaciones - 1); // Ajuste para índices de 0 a n-1
+    while (estacionConCura < 0) { // Garantizar un índice válido
+        estacionConCura = generarNumeroAleatorio(cantidadEstaciones - 1);
+    }
 
-	// Iniciar la batalla en la estación seleccionada
-	vector<bitacora> registros;
-	bool resultadoBatalla = batalla(estacionSeleccionada, registros, equipo);
+    // Mover un puntero temporal a la estación seleccionada
+    estacion* tempCura = inicio;
+    for (int i = 0; i < estacionConCura && tempCura != nullptr; i++) {
+        tempCura = tempCura->siguiente;
+    }
 
-	// Batalla hasta que consiga la cura o pierda
+    // Validar que la estación existe antes de asignar la cura
+    if (tempCura != nullptr) {
+        tempCura->cura = true;
+        cout << "La estación con cura es: " << tempCura->nombre << endl;
+
+        // Elegir el mapa para jugar
+        nuevoMapa(estacionSeleccionada, tempCura->nombre);
+    }
+    else {
+        cout << "Error: No se pudo asignar la estación con cura." << endl;
+    }
+
+
+    // Iniciar la batalla en la estación seleccionada
+    vector<bitacora> registros;
+    bool resultadoBatalla = batalla(estacionSeleccionada, registros, equipo);
+
+    // Batalla hasta que consiga la cura o pierda
     while (resultadoBatalla) {
         // Verificar si la estación actual tiene la cura
         if (estacionSeleccionada->cura) {
@@ -2024,37 +2213,33 @@ void jugar(estacion* inicio, vector<vector<soldado>>& equipos) {
         }
 
         // Mover al equipo a la siguiente camino mas corto a la cura
-		estacion* estacionSiguiente = moverAEstacionSiguiente(inicio,tempCura->nombre);
-        if (!estacionSiguiente) {
-            cout << "No hay más estaciones para explorar. Fin del juego." << endl;
-            break;
-        }
+        estacionSeleccionada = estacionSeleccionada->siguiente;
+
 
         // Continuar con la batalla en la siguiente estación}
-        resultadoBatalla = batalla(estacionSiguiente, registros, equipo);
-        estacionSeleccionada = estacionSiguiente;
+        resultadoBatalla = batalla(estacionSeleccionada, registros, equipo);
     }
 
-	// Mostrar resultados de la batalla
-	cout << "\n--- Resultados de la Batalla ---" << endl;
-	for (const bitacora& registro : registros) {
-		cout << "Estación: " << registro.estacion << endl;
-		for (const string& evento : registro.eventos) {
-			cout << "  " << evento << endl;
-		}
-	}
+    // Mostrar resultados de la batalla
+    cout << "\n--- Resultados de la Batalla ---" << endl;
+    for (const bitacora& registro : registros) {
+        cout << "Estación: " << registro.estacion << endl;
+        for (const string& evento : registro.eventos) {
+            cout << "  " << evento << endl;
+        }
+    }
 
 }
 
-void jugarConArchivos(vector<usos>accesorios,estacion*& inicio, vector<soldado>soldados) {
-	// Meter accesorios a la mochila de los soldados
-	for (auto& soldado : soldados) {
-		for (int i = 0; i < 3; i++) {
-			usos arma = accesorios[generarNumeroAleatorio(accesorios.size())];
-			soldado.mochila.accesoriosConUsos.push_back(arma);
-		}
-	}
-    // Mostrar estaciones disponibles
+void jugarConArchivos(vector<usos>accesorios, estacion*& inicio, vector<soldado>soldados) {
+    // Meter accesorios a la mochila de los soldados
+    for (auto& soldado : soldados) {
+        for (int i = 0; i < 3; i++) {
+            usos arma = accesorios[generarNumeroAleatorio(accesorios.size())];
+            soldado.mochila.accesoriosConUsos.push_back(arma);
+        }
+    }
+
     cout << "Estaciones Disponibles" << endl;
     mostrarEstaciones(inicio);
 
@@ -2071,16 +2256,30 @@ void jugarConArchivos(vector<usos>accesorios,estacion*& inicio, vector<soldado>s
     cout << "Estación seleccionada: " << estacionSeleccionada->nombre << endl;
 
     // Definir estación con cura aleatoria
-    int estacionConCura = generarNumeroAleatorio(cantidadEstaciones);
-    while (estacionConCura < 1) {
-        estacionConCura = generarNumeroAleatorio(cantidadEstaciones);
+   // Generar una estación aleatoria con cura
+    int estacionConCura = generarNumeroAleatorio(cantidadEstaciones - 1); // Ajuste para índices de 0 a n-1
+    while (estacionConCura < 0) { // Garantizar un índice válido
+        estacionConCura = generarNumeroAleatorio(cantidadEstaciones - 1);
     }
+
+    // Mover un puntero temporal a la estación seleccionada
     estacion* tempCura = inicio;
-    for (int i = 0; i < estacionConCura; i++) {
+    for (int i = 0; i < estacionConCura && tempCura != nullptr; i++) {
         tempCura = tempCura->siguiente;
     }
-    tempCura->cura = true;
-    cout << "La estación con cura es: " << tempCura->nombre << endl;
+
+    // Validar que la estación existe antes de asignar la cura
+    if (tempCura != nullptr) {
+        tempCura->cura = true;
+        cout << "La estación con cura es: " << tempCura->nombre << endl;
+
+        // Elegir el mapa para jugar
+        nuevoMapa(estacionSeleccionada, tempCura->nombre);
+    }
+    else {
+        cout << "Error: No se pudo asignar la estación con cura." << endl;
+    }
+
 
     // Iniciar la batalla en la estación seleccionada
     vector<bitacora> registros;
@@ -2095,15 +2294,11 @@ void jugarConArchivos(vector<usos>accesorios,estacion*& inicio, vector<soldado>s
         }
 
         // Mover al equipo a la siguiente camino mas corto a la cura
-        estacion* estacionSiguiente = moverAEstacionSiguiente(inicio, tempCura->nombre);
-        if (!estacionSiguiente) {
-            cout << "No hay más estaciones para explorar. Fin del juego." << endl;
-            break;
-        }
+        estacionSeleccionada = estacionSeleccionada->siguiente;
+
 
         // Continuar con la batalla en la siguiente estación}
-        resultadoBatalla = batalla(estacionSiguiente, registros, soldados);
-        estacionSeleccionada = estacionSiguiente;
+        resultadoBatalla = batalla(estacionSeleccionada, registros, soldados);
     }
 
     // Mostrar resultados de la batalla
@@ -2115,246 +2310,262 @@ void jugarConArchivos(vector<usos>accesorios,estacion*& inicio, vector<soldado>s
         }
     }
 
-
-
-
 }
 
 //manejo de archivos 
 
-vector<soldado> leerSoldados(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cout << "Error al abrir el archivo de soldados: " << filename << endl;
-        exit(1);
+vector<string> split(string s, char delimiter) {
+    stringstream ss(s);
+    string t;
+    vector<string> listaResultados;
+    while (getline(ss, t, delimiter)) {
+        listaResultados.push_back(t);
     }
-
-    vector<soldado> soldados;
-    int cantidad;
-    file >> cantidad;
-    file.ignore(); // Ignorar el salto de línea después de la cantidad
-
-    // Verificar si la cantidad es válida
-    if (cantidad <= 0) {
-        cout << "La cantidad de soldados es inválida." << endl;
-        exit(1);
-    }
-
-    // Leer los datos de cada soldado
-    for (int i = 0; i < cantidad; ++i) {
-        string nombre;
-        int salud;
-
-        // Leer el nombre del soldado
-        getline(file, nombre);  // Obtener nombre del soldado
-        cout << "Nombre leído: [" << nombre << "]" << endl; // Depuración
-
-        // Verifica que el nombre no esté vacío
-        if (nombre.empty()) {
-            cout << "Error: Nombre vacío para el soldado #" << i + 1 << endl;
-            continue; // Si el nombre es vacío, se salta al siguiente soldado
-        }
-
-        // Leer la salud del soldado
-        file >> salud;
-        file.ignore(); // Ignorar el salto de línea después de la salud
-
-        // Verifica si la salud es válida
-        if (salud <= 0) {
-            cout << "Error: Salud inválida para el soldado #" << i + 1 << endl;
-            salud = 100; // Asignar valor predeterminado si la salud es inválida
-        }
-
-        // Crear el soldado y añadirlo al vector
-        mochila mochila;
-        soldados.push_back({ nombre, salud,mochila });
-
-        // Leer la línea separadora (si es necesario)
-        string separator;
-        getline(file, separator);  // Leer la línea de separación
-        cout << "Separador leído: [" << separator << "]" << endl; // Depuración
-    }
-
-    return soldados;
+    return listaResultados;
 }
 
-vector<usos> leerUsos(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error al abrir el archivo: " << filename << endl;
-        exit(1);
+int buscarZombiepornombre(string nombre, vector<zombieFortaleza> zombies) {
+
+    if (zombies.empty()) {
+        return -1;
     }
 
-    vector<usos> listaUsos; // Vector de usos
+    for (int i = 0; i < zombies.size(); i++) {
+        zombieFortaleza t = zombies[i];
+        if (t.zombie->nombre == nombre) {
+            return i;
+        }
+    }
+
+    return -1;
+
+}
+
+string buscarEstacionporID(string id, estacion* inicio) {
+
+
+    if (inicio->id == id) {
+        return inicio->nombre;
+    }
+
+    if (inicio->siguiente == nullptr) {
+        return "";
+    }
+
+    return buscarEstacionporID(id, inicio->siguiente);
+}
+
+//void agregarEstacion(estacion*& inicio)
+void leerMapa(const string& filename, vector<zombieFortaleza> zombies, estacion*& inicio) {
+    ifstream infile(filename);
+    // estacion* nuevaEstacion = new estacion;
+    //estacion* inicio = nullptr;
+    estacion* prev = nullptr;
+    vector<estacion> listaEstaciones;
     int cantidad;
 
-    // Leer cantidad de accesorios
-    if (!(file >> cantidad)) {
-        cerr << "Error: El archivo no contiene un número válido al inicio." << endl;
-        exit(1);
-    }
-    file.ignore(); // Ignorar el salto de línea después de la cantidad
-    string separator;
+    std::string line;
+    std::getline(infile, line);
 
-    for (int i = 0; i < cantidad; ++i) {
-        int indice;
-        accesorio* acc = new accesorio; // Crear un nuevo accesorio dinámico
-        usos uso;
+    cantidad = stoi(line);
+    int cant_estaciones = 0;
+    while (cant_estaciones < cantidad && std::getline(infile, line))
+    {
 
-        // Leer datos del accesorio
-        file >> indice;        // Leer y descartar el índice
-        file.ignore();         // Ignorar el salto de línea después del índice
-        getline(file, acc->nombre);
-        getline(file, acc->tipo);
-        file >> acc->valor;
-        file >> uso.usos;
-        file.ignore();         // Ignorar el salto de línea después del número de usos
+        estacion* e = new estacion;
 
-        // Generar descripción automática (puedes personalizarla)
-        acc->descripcion = "Tipo: " + acc->tipo + ", Valor: " + to_string(acc->valor);
+        std::getline(infile, line);
+        e->id = line;
 
-        // Asociar accesorio al uso
-        uso.accesorioPtr = acc;
+        std::getline(infile, line);
+        e->nombre = line;
+        std::cout << "estacion: " << line << endl;
 
-        // Leer y descartar el separador "---"
-        getline(file, separator);
-        if (separator != "---") {
-            cerr << "Error: Formato incorrecto, se esperaba '---' después del accesorio #" << i + 1 << endl;
-            exit(1);
+        std::getline(infile, line);
+
+        // carga de zombies a la estacion
+        while (std::getline(infile, line) && line != "--") {
+            std::cout << "zombies estacion: " << line << endl;
+            vector<string>x = split(line, '|');
+            int indexZombiesSeleccion = buscarZombiepornombre(x[1], zombies);
+            if (indexZombiesSeleccion >= 0) { // si no se consigue el; tipo de zombie no lo cargamos en la estacion
+                zombieFortaleza seleccion = zombies[indexZombiesSeleccion];
+                for (int i = 0; i < stoi(x[0]); i++) {
+                    e->zombies.push_back(seleccion);
+                }
+            }
         }
 
-        listaUsos.push_back(uso);
+        // carga de adyacencias a estacion
+        std::getline(infile, line);
+        vector<string> adyacencias = split(line, '|');
+        // en caso que solo haya una adyacencia la funcion split me esta retornando vacio
+        if (adyacencias.empty()) {
+            adyacencias = { line };
+        }
+
+        //cargamos temporalmente las adyacencias por ID, luego debemos hacerlo por nombre porque asi es que nos funciona
+        for (int i = 0; i < adyacencias.size(); i++) {
+            std::cout << "adyacencias estacion: " << adyacencias[i] << endl;
+            if (adyacencias[i] != "") {
+                vector<string> sadyacencia = split(adyacencias[i], ':');
+                if (sadyacencia.size() == 2 && sadyacencia[0] != "") { // se valida que solo existan 2 sino no se carga la distancia
+                    estacionesAdyacentes idadyacente;
+                    idadyacente.destino = sadyacencia[0];
+                    idadyacente.distancia = stoi(sadyacencia[1]);
+
+                    e->ady.push_back(idadyacente);
+                }
+
+            }
+        }
+
+        if (inicio == nullptr) {
+            inicio = e;
+        }
+        else {
+            prev->siguiente = e;
+        }
+
+        prev = e;
+        cant_estaciones++;
     }
 
-    return listaUsos;
+    infile.close();
+}
+
+tuple<vector<usos>, vector<usos>, vector<usos>> leerAccesorios(const string& filename) {
+    ifstream infile(filename);
+    vector<usos> ataque;
+    vector<usos> defensa;
+    vector<usos> salud;
+
+    int cantidad;
+    std::string line;
+    std::getline(infile, line);
+
+    cantidad = stoi(line);
+
+    int cant_accesorios = 0;
+    while (cant_accesorios < cantidad && std::getline(infile, line)) {
+        usos z;
+        accesorio* t = new accesorio;
+
+        std::getline(infile, line); // Leer nombre
+        t->nombre = line;
+
+        std::getline(infile, line); // Leer tipo
+        t->tipo = line;
+
+        std::getline(infile, line); // Leer valor
+        t->valor = stoi(line);
+
+        std::getline(infile, line); // Leer usos
+        z.usos = stoi(line);
+
+        z.accesorioPtr = t;
+
+        if (t->tipo == "Ataque") {
+            ataque.push_back(z);
+        }
+        else if (t->tipo == "Defensa") {
+            defensa.push_back(z);
+        }
+        else if (t->tipo == "Supervivencia") {
+            salud.push_back(z);
+        }
+
+        cant_accesorios++;
+    }
+
+    infile.close(); // Cerrar el archivo después de leer
+    return { ataque, defensa, salud };
+}
+
+vector<soldado> leerSoldados(const string& filename) {
+    ifstream infile(filename);
+    vector<soldado> listaSoldados;
+    int cantidad;
+
+    std::string line;
+    std::getline(infile, line);
+
+    cantidad = stoi(line);
+    //std::cout << " cantidad tiene:  " << cantidad;
+
+    int cant_soldados = 0;
+    while (cant_soldados < cantidad && std::getline(infile, line))
+    {
+        //std::cout << "nuevo elemento: " << line;
+
+        soldado z;
+        std::getline(infile, line);
+        z.nombre = line;
+
+        std::getline(infile, line);
+        //std::cout << "ataque: "  << line;
+        z.salud = stoi(line);
+
+        listaSoldados.push_back(z);
+        cant_soldados++;
+
+    }
+    infile.close();
+    return listaSoldados;
 }
 
 vector<zombieFortaleza> leerZombiesConFortaleza(const string& filename) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cerr << "Error al abrir el archivo: " << filename << endl;
-        exit(1);
-    }
+    // Primero, leer y mostrar el contenido del archivo
+    //readFile(filename);
 
+    ifstream infile(filename);
     vector<zombieFortaleza> listaZombies;
     int cantidad;
 
     // Leer la cantidad de zombies
-    if (!(file >> cantidad)) {
+    /* if (!(file >> cantidad)) {
         cerr << "Error: El archivo no contiene un número válido al inicio." << endl;
-        exit(1);
-    }
-    file.ignore(); // Ignorar el salto de línea después de la cantidad
-    string separator;
+        return listaZombies; // Retornar vector vacío en caso de error
+    }*/
 
-    for (int i = 0; i < cantidad; ++i) {
-        string nombre;
-        int ataque, fortaleza;
+    std::string line;
+    std::getline(infile, line);
 
-        // Leer datos del zombie
-        getline(file, nombre);       // Leer el nombre
-        file >> ataque;              // Leer el ataque
-        file >> fortaleza;           // Leer la fortaleza
-        file.ignore();               // Ignorar el salto de línea después de fortaleza
+    cantidad = stoi(line);
+    //std::cout << " cantidad tiene:  " << cantidad;
 
-        // Crear la descripción del zombie
-        string descripcion = "Zombie peligroso: " + nombre;
+    int cant_zombies = 0;
+    while (cant_zombies < cantidad && std::getline(infile, line))
+    {
+        //std::cout << "nuevo elemento: " << line;
 
-        // Crear un zombie dinámicamente
-        zombie* z = new zombie{ nombre, descripcion, ataque };
+        zombie* z = new zombie;
+        std::getline(infile, line);
+        z->nombre = line;
 
-        // Asociar el zombie con su fortaleza y agregarlo al vector
-        listaZombies.push_back({ z, fortaleza });
+        std::getline(infile, line);
+        //std::cout << "ataque: "  << line;
+        z->ataque = stoi(line);
 
-        // Leer y descartar el separador "---"
-        getline(file, separator);
-        if (separator != "---" && i < cantidad - 1) {
-            cerr << "Error: Formato incorrecto, se esperaba '---' después del zombie #" << i + 1 << endl;
-            exit(1);
-        }
-    }
+        std::getline(infile, line);
 
-    return listaZombies;
-}
+        zombieFortaleza zFortaleza;
+        zFortaleza.zombie = z;
+        // std::cout << "fortaleza: " << line;
+        zFortaleza.fortaleza = stoi(line);
 
-void leerMapa(const string& filename, vector<zombieFortaleza>& zombiesDisponibles, estacion*& inicio) {
-    ifstream file(filename);
-    if (!file.is_open()) {
-        cout << "Error al abrir el archivo: " << filename << endl;
-        exit(1);
+        listaZombies.push_back(zFortaleza);
+        cant_zombies++;
+
     }
 
-    int cantidadEstaciones;
-    file >> cantidadEstaciones;
-    file.ignore();
-
-    estacion* ultimaEstacion = nullptr;
-
-    for (int i = 0; i < cantidadEstaciones; ++i) {
-        string linea;
-        estacion* nuevaEstacion = new estacion();
-
-        // Leer número de estación
-        getline(file, linea); // Ignorar número de estación
-        getline(file, nuevaEstacion->nombre); // Leer nombre de la estación
-
-        // Leer zombies
-        getline(file, linea); // Ignorar separador "-"
-        while (getline(file, linea) && linea != "--") {
-            istringstream iss(linea);
-            int cantidad;
-            string nombreZombie;
-            iss >> cantidad;
-            getline(iss, nombreZombie, '|');
-            nombreZombie = nombreZombie.substr(0, nombreZombie.find_last_not_of(' ') + 1);
-
-            // Buscar el zombie en la lista de zombies disponibles
-            bool encontrado = false;
-            for (const auto& zf : zombiesDisponibles) {
-                if (zf.zombie->nombre == nombreZombie) {
-                    zombieFortaleza zombieEncontrado = { zf.zombie, zf.fortaleza };
-					for (int j = 0; j < cantidad; ++j) {
-                    nuevaEstacion->zombies.push_back(zombieEncontrado);
-					}
-                    encontrado = true;
-                    break;
-                }
-            }
-            if (!encontrado) {
-                cerr << "Error: Zombie no encontrado: " << nombreZombie << endl;
-            }
+    /*    for (int i = 0; i < listaZombies.size(); i++) {
+            std::cout << listaZombies[i] .zombie->nombre << endl;
         }
+        */
 
-        // Leer conexiones adyacentes
-        while (getline(file, linea) && !linea.empty()) {
-            istringstream iss(linea);
-            string conexion;
-            while (getline(iss, conexion, '|')) {
-                size_t pos = conexion.find(':');
-                if (pos != string::npos) {
-                    int destino = stoi(conexion.substr(0, pos));
-                    int distancia = stoi(conexion.substr(pos + 1));
-                    nuevaEstacion->ady.push_back({ nullptr, distancia });
-                }
-            }
-        }
-
-        // Enlazar la lista
-        if (inicio == nullptr) {
-            inicio = nuevaEstacion;
-        }
-        else {
-            ultimaEstacion->siguiente = nuevaEstacion;
-        }
-        ultimaEstacion = nuevaEstacion;
-
-        // Validar separador "---"
-        getline(file, linea);
-        if (linea != "---") {
-            cerr << "Error: Se esperaba '---' después de la estación #" << i + 1 << endl;
-            exit(1);
-        }
-    }
+    infile.close(); // Cerrar el archivo después de leer
+    return listaZombies; // Retornar la lista de zombies
 }
 
 
@@ -2370,15 +2581,15 @@ int main() {
     estacion* inicio = nullptr;
     while (opcionPrincipal != 7) {
 
-        cout << "\n=== Juego: Salvar al planeta de los zombies ===" << endl;
-        cout << "1. Zombies" << endl;
-        cout << "2. Accesorios" << endl;
-        cout << "3. Equipos" << endl;
-        cout << "4. Mochilas" << endl;
-        cout << "5. Mapa" << endl;
-        cout << "6. Jugar con cosas creadas" << endl;
-        cout << "7  Jugar con archivos" << endl;
-        cout << "8. Salir del Juego" << endl;
+        std::cout << "\n=== Juego: Salvar al planeta de los zombies ===" << endl;
+        std::cout << "1. Zombies" << endl;
+        std::cout << "2. Accesorios" << endl;
+        std::cout << "3. Equipos" << endl;
+        std::cout << "4. Mochilas" << endl;
+        std::cout << "5. Mapa" << endl;
+        std::cout << "6. Jugar con cosas creadas" << endl;
+        std::cout << "7  Jugar con archivos" << endl;
+        std::cout << "8. Salir del Juego" << endl;
         opcionPrincipal = leerEntero("Eliga una opcion:");
 
 
@@ -2386,12 +2597,12 @@ int main() {
         case 1: {
             system("cls");
             int opcionZombies;
-            cout << "\n--- Zombies ---" << endl;
-            cout << "1. Crear Tipos de Zombies" << endl;
-            cout << "2. Ver Tipos de Zombies" << endl;
-            cout << "3. Ver Zombies Creados" << endl;
-            cout << "4. Volver " << endl;
-            cout << "Ingrese opción: ";
+            std::cout << "\n--- Zombies ---" << endl;
+            std::cout << "1. Crear Tipos de Zombies" << endl;
+            std::cout << "2. Ver Tipos de Zombies" << endl;
+            std::cout << "3. Ver Zombies Creados" << endl;
+            std::cout << "4. Volver " << endl;
+            std::cout << "Ingrese opción: ";
             cin >> opcionZombies;
 
             switch (opcionZombies) {
@@ -2408,10 +2619,10 @@ int main() {
                 mostrarZombies(zombiesCreados);
                 break;
             case 4:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
             }
 
             break;
@@ -2419,23 +2630,23 @@ int main() {
         case 2: {
             system("cls");
             int opcionAccesorios;
-            cout << "\n--- Accesorios ---" << endl;
-            cout << "1. Agregar Accesorios" << endl;
-            cout << "2. Modificar Accesorios" << endl;
-            cout << "3. Eliminar Accesorios" << endl;
-            cout << "4. Mostrar Accesorios" << endl;
-            cout << "5. Volver" << endl;
+            std::cout << "\n--- Accesorios ---" << endl;
+            std::cout << "1. Agregar Accesorios" << endl;
+            std::cout << "2. Modificar Accesorios" << endl;
+            std::cout << "3. Eliminar Accesorios" << endl;
+            std::cout << "4. Mostrar Accesorios" << endl;
+            std::cout << "5. Volver" << endl;
             opcionAccesorios = leerEntero("Ingrese opción: ");
 
             switch (opcionAccesorios) {
             case 1: {
                 system("cls");
                 int opcionAccesorios1;
-                cout << "\n--- Agregar Accesorios ---" << endl;
-                cout << "1. Armas" << endl;
-                cout << "2. Defensas" << endl;
-                cout << "3. Salud" << endl;
-                cout << "4. Volver" << endl;
+                std::cout << "\n--- Agregar Accesorios ---" << endl;
+                std::cout << "1. Armas" << endl;
+                std::cout << "2. Defensas" << endl;
+                std::cout << "3. Salud" << endl;
+                std::cout << "4. Volver" << endl;
                 opcionAccesorios1 = leerEntero("Ingrese opción: ");
                 switch (opcionAccesorios1) {
                 case 1:
@@ -2451,21 +2662,21 @@ int main() {
                     saludUsuarioCrear(saludCreada);
                     break;
                 case 4:
-                    cout << "Volviendo al menú principal...\n";
+                    std::cout << "Volviendo al menú principal...\n";
                     break;
                 default:
-                    cout << "Opción no válida.\n";
+                    std::cout << "Opción no válida.\n";
                 }
                 break;
             }
             case 2: {
                 system("cls");
                 int opcionAccesorios2;
-                cout << "\n--- Modificar Accesorios ---" << endl;
-                cout << "1. Armas" << endl;
-                cout << "2. Defensas" << endl;
-                cout << "3. Salud" << endl;
-                cout << "4. Volver" << endl;
+                std::cout << "\n--- Modificar Accesorios ---" << endl;
+                std::cout << "1. Armas" << endl;
+                std::cout << "2. Defensas" << endl;
+                std::cout << "3. Salud" << endl;
+                std::cout << "4. Volver" << endl;
                 opcionAccesorios2 = leerEntero("Ingrese opción: ");
                 switch (opcionAccesorios2) {
                 case 1:
@@ -2481,21 +2692,21 @@ int main() {
                     modificarAccesorio(saludCreada);
                     break;
                 case 4:
-                    cout << "Volviendo al menú principal...\n";
+                    std::cout << "Volviendo al menú principal...\n";
                     break;
                 default:
-                    cout << "Opción no válida.\n";
+                    std::cout << "Opción no válida.\n";
                 }
                 break;
             }
             case 3: {
                 system("cls");
                 int opcionAccesorios3;
-                cout << "\n--- Eliminar Accesorios ---" << endl;
-                cout << "1. Armas" << endl;
-                cout << "2. Defensas" << endl;
-                cout << "3. Salud" << endl;
-                cout << "4. Volver" << endl;
+                std::cout << "\n--- Eliminar Accesorios ---" << endl;
+                std::cout << "1. Armas" << endl;
+                std::cout << "2. Defensas" << endl;
+                std::cout << "3. Salud" << endl;
+                std::cout << "4. Volver" << endl;
                 opcionAccesorios3 = leerEntero("Ingrese opción: ");
                 switch (opcionAccesorios3) {
                 case 1:
@@ -2511,21 +2722,21 @@ int main() {
                     eliminarAccesorio(saludCreada);
                     break;
                 case 4:
-                    cout << "Volviendo al menú principal...\n";
+                    std::cout << "Volviendo al menú principal...\n";
                     break;
                 default:
-                    cout << "Opción no válida.\n";
+                    std::cout << "Opción no válida.\n";
                 }
                 break;
             }
             case 4: {
                 system("cls");
                 int opcionAccesorios4;
-                cout << "\n--- Mostrar Accesorios ---" << endl;
-                cout << "1. Armas" << endl;
-                cout << "2. Defensas" << endl;
-                cout << "3. Salud" << endl;
-                cout << "4. Volver" << endl;
+                std::cout << "\n--- Mostrar Accesorios ---" << endl;
+                std::cout << "1. Armas" << endl;
+                std::cout << "2. Defensas" << endl;
+                std::cout << "3. Salud" << endl;
+                std::cout << "4. Volver" << endl;
                 opcionAccesorios4 = leerEntero("Ingrese opción: ");
                 switch (opcionAccesorios4) {
                 case 1:
@@ -2541,31 +2752,31 @@ int main() {
                     mostrarAccesoriosConUsos(saludCreada);
                     break;
                 case 4:
-                    cout << "Volviendo al menú principal...\n";
+                    std::cout << "Volviendo al menú principal...\n";
                     break;
                 default:
-                    cout << "Opción no válida.\n";
+                    std::cout << "Opción no válida.\n";
                 }
                 break;
             }
             case 5:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
             }
             break;
         }
         case 3: {
             system("cls");
             int opcionEquipos;
-            cout << "\n--- Equipos ---" << endl;
-            cout << "1. Crear equipo" << endl;
-            cout << "2. Modificar Equipo" << endl;
-            cout << "3. Eliminar Equipo" << endl;
-            cout << "4. Mostrar Equipos" << endl;
-            cout << "5. Volver" << endl;
-            cout << "Ingrese opción: ";
+            std::cout << "\n--- Equipos ---" << endl;
+            std::cout << "1. Crear equipo" << endl;
+            std::cout << "2. Modificar Equipo" << endl;
+            std::cout << "3. Eliminar Equipo" << endl;
+            std::cout << "4. Mostrar Equipos" << endl;
+            std::cout << "5. Volver" << endl;
+            std::cout << "Ingrese opción: ";
             cin >> opcionEquipos;
 
             switch (opcionEquipos) {
@@ -2585,28 +2796,28 @@ int main() {
             case 4:
                 system("cls");
                 mostrarEquipos(equiposCreados);
-                cout << "Presione cualquier tecla para continuar..." << endl;
+                std::cout << "Presione cualquier tecla para continuar..." << endl;
                 cin.ignore();
                 cin.get();
 
                 break;
             case 5:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
             }
             break;
         }
         case 4: {
             system("cls");
             int opcionMochilas;
-            cout << "\n--- Mochilas ---" << endl;
-            cout << "1. Agregar Accesorios a Soldado" << endl;
-            cout << "2. Modificar Mochila" << endl;
-            cout << "3. Eliminar Accesorios de Mochila" << endl;
-            cout << "4. Volver" << endl;
-            cout << "Ingrese opción: ";
+            std::cout << "\n--- Mochilas ---" << endl;
+            std::cout << "1. Agregar Accesorios a Soldado" << endl;
+            std::cout << "2. Modificar Mochila" << endl;
+            std::cout << "3. Eliminar Accesorios de Mochila" << endl;
+            std::cout << "4. Volver" << endl;
+            std::cout << "Ingrese opción: ";
             cin >> opcionMochilas;
 
             switch (opcionMochilas) {
@@ -2624,25 +2835,25 @@ int main() {
                 eliminarDeMochila(equiposCreados);
                 break;
             case 4:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
             }
             break;
         }
         case 5: {
             system("cls");
             int opcionMapa;
-            cout << "\n--- Mapa ---" << endl;
-            cout << "1. Agregar Estación" << endl;
-            cout << "2. Modificar Estación" << endl;
-            cout << "3. Eliminar Estación" << endl;
-            cout << "4. Mostrar Estaciones" << endl;
-            cout << "5. Agregar Zombie a Estación" << endl;
-            cout << "6. Agregar Conexión entre Estaciones" << endl;
-            cout << "7. Volver" << endl;
-            cout << "Ingrese opción: ";
+            std::cout << "\n--- Mapa ---" << endl;
+            std::cout << "1. Agregar Estación" << endl;
+            std::cout << "2. Modificar Estación" << endl;
+            std::cout << "3. Eliminar Estación" << endl;
+            std::cout << "4. Mostrar Estaciones" << endl;
+            std::cout << "5. Agregar Zombie a Estación" << endl;
+            std::cout << "6. Agregar Conexión entre Estaciones" << endl;
+            std::cout << "7. Volver" << endl;
+            std::cout << "Ingrese opción: ";
             opcionMapa = leerEntero("Ingrese opción: ");
 
             switch (opcionMapa) {
@@ -2671,19 +2882,19 @@ int main() {
                 agregarConexiones(inicio);
                 break;
             case 7:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
             }
             break;
         }
-        case 6:
+        case 6: {
             system("cls");
-            cout << "Como quieres jugar" << endl;
-            cout << "1. Jugar con cosas creadas" << endl;
-            cout << "2. Jugar de inmediato" << endl;
-            cout << "3. Volver" << endl;
+            std::cout << "Como quieres jugar" << endl;
+            std::cout << "1. Jugar con cosas creadas" << endl;
+            std::cout << "2. Jugar de inmediato" << endl;
+            std::cout << "3. Volver" << endl;
             int opcionJugar = leerEntero("Ingrese Opcion: ");
 
             switch (opcionJugar) {
@@ -2691,41 +2902,50 @@ int main() {
                 system("cls");
                 jugar(inicio, equiposCreados);
                 break;
-
             case 2:
                 system("cls");
-
                 inicio = nullptr;
-
                 // Crear el mapa con las 10 estaciones
                 crearMapaDiezEstaciones(inicio);
-				
-
                 // Luego se pasa a la función jugar con los equipos predeterminados
                 jugar(inicio, equiposPredeterminados);
-
                 break;
-
             case 3:
-                cout << "Volviendo al menú principal...\n";
+                std::cout << "Volviendo al menú principal...\n";
                 break;
 
             default:
-                cout << "Opción no válida.\n";
+                std::cout << "Opción no válida.\n";
                 break;
             }
             break; // Se asegura de que el case 6 termine correctamente
-
-        case 7:
+        }
+        case 7: {
             system("cls");
-            inicio = nullptr;
-            zombiesCreados = leerZombiesConFortaleza("Zombie.zmb");
-            leerMapa("Mapa.zmb", zombiesCreados, inicio);
-            jugarConArchivos(leerUsos("Accesorios.zmb"), inicio, leerSoldados("Soldados.zmb"));
 
-        case 8:
-            cout << "Gracias por jugar. ¡Hasta luego!\n";
-            liberarMemoria(zombiesCreados);
+            inicio = nullptr;
+            zombiesCreados = leerZombiesConFortaleza("C:\\mirko\\Zombie.zmb");
+            soldadoscreados = leerSoldados("C:\\mirko\\Soldado.zmb");
+            leerMapa("C:\\mirko\\Mapa.zmb", zombiesCreados, inicio);
+
+            estacion* tmp = inicio;  //acomodamos arreglo de adyacentes con la funciona agregarAdjyacencas
+
+            while (tmp->siguiente != nullptr) {
+
+                for (int i = 0; i < tmp->ady.size(); i++) {
+                    estacionesAdyacentes porid = tmp->ady[i];
+                    string destino = buscarEstacionporID(porid.destino, inicio);
+                    std::cout << porid.destino << " --- " << destino << endl;
+                    agregarAdyacente(*tmp, destino, porid.distancia);
+                }
+
+                std::cout << tmp->nombre << endl;
+                tmp = tmp->siguiente;
+            }
+            mostrarEstaciones(inicio);
+        }
+        case 8: {
+            std::cout << "Gracias por jugar. ¡Hasta luego!\n";
             limpiarMemoria(armasCreadas);
             limpiarMemoria(defensasCreadas);
             limpiarMemoria(saludCreada);
@@ -2733,9 +2953,9 @@ int main() {
 
             break;
         default:
-            cout << "Opción no válida. Inténtelo de nuevo.\n";
+            std::cout << "Opción no válida. Inténtelo de nuevo.\n";
+        }
         }
     }
 
-    return 0;
 }
